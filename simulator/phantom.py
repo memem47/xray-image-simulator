@@ -25,7 +25,7 @@ def cone_thickness_map(height_px=512, width_px=512,
     return canvas
     
 def _cone_cone(h_px, w_px, base_mm, height_mm):
-    y = np.linspace(0, height_mm, h_px)
+    y = np.linspace(0, height_mm, h_px, endpoint=False)
     radius = (1 - y / height_mm) * (base_mm / 2.0)
     thickness = 2.0 * radius
     # Broadcast thickness to every column
