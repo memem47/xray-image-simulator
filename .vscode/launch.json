@@ -12,6 +12,13 @@
             "program": "${workspaceFolder}/simulate.py",
             "console": "integratedTerminal",
             "args": ["--kvp", "80", "--mas", "10", "--out", "demo.png"]
+        },
+        {
+            "name": "Python: gui.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/gui.py",
+            "console": "integratedTerminal",
         }
     ]
 }
