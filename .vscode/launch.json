@@ -19,6 +19,13 @@
             "request": "launch",
             "program": "${workspaceFolder}/gui.py",
             "console": "integratedTerminal",
+        },
+        {
+            "name": "Python: pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "justMyCode": false
         }
     ]
 }
