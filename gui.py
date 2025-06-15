@@ -13,6 +13,7 @@ import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 from simulator.simulate import simulate
 
@@ -105,6 +106,23 @@ class XrayGUI(tk.Tk):
         ttk.Button(ctrl, text="Save PNG", command=self._save_png).pack(
             pady=(6, 0), fill=tk.X)
         
+        # Output image size
+        res_frame = ttk.Frame(ctrl)
+        res_frame.pack(fill=tk.X, pady=4)
+
+        ttk.Label(res_frame, text="Output size:").pack(side=tk.LEFT, padx=(0,4))
+
+        self.out_w = tk.IntVar(value=self.IMG_W)
+        self.out_h = tk.IntVar(value=self.IMG_H)
+
+        ttk.Spinbox(res_frame, from_=128, to=4096, increment=32,
+                    textvariable=self.out_w, width=5).pack(side=tk.LEFT)
+        ttk.Label(res_frame, text="x").pack(side=tk.LEFT)
+        ttk.Spinbox(res_frame, from_=128, to=4096, increment=32,
+                    textvariable=self.out_h, width=5).pack(side=tk.LEFT)
+        ttk.Label(res_frame, text="px").pack(side=tk.LEFT)
+
+
     def _build_canvas(self):
         fig = plt.Figure(figsize=(5,5), dpi=100)
         self.ax = fig.add_subplot(111)
@@ -145,7 +163,18 @@ class XrayGUI(tk.Tk):
         if not path:
             return
         try:
-            matplotlib.image.imsave(path, self.img.get_array(), cmap='gray')
+            # get array from the canvas
+            arr = self.im.get_array()
+
+            # resize if designated by GUI
+            w_out, h_out = self.out_w.get(), self.out_h.get()
+            if (arr.shape[1], arr.shape[0]) != (w_out, h_out):
+                arr8 = (arr * 255).astype(np.uint8)
+                arr = np.asarray(Image.fromarray(arr8).esuze(
+                    (h_out, w_out), resample=Image.BILINEAR) / 255.0)
+
+            # save the image
+            matplotlib.image.imsave(path, arr, cmap='gray')
             messagebox.showinfo("Saved", f"Image saved:\n{path}")
         except Exception as e:
             messagebox.showerror("Error", str(e))
