@@ -131,10 +131,43 @@ class XrayGUI(tk.Tk):
         canvas = FigureCanvasTkAgg(fig, master=self)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.grid(row=0, column=1, sticky="nsew")
+
+        # --- cursor read-out ---
+        canvas_widget.bind("<Motion>", self._on_mouse_move)
+        self.status_var = tk.StringVar(value="")
+        status = ttk.Label(self, textvariable=self.status_var, anchor="w")
+        status.grid(row=1, column=1, sticky="ew", padx=4, pady=(2,4))
+
         self.canvas = canvas
         self.rowconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
+    # --- Mouse handler ---
+    def _on_mouse_move(self, event):
+        """
+        Update status bar with cursor location and pixel intensity.
+        Coordinates are integers in image space; value is 0-1 float.
+
+        Args:
+            event (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        # Transform canvas coords -> Axes -> data coords
+        inv = self.ax.transData.inverted()
+        xdata, ydata = inv.transform((event.x, event.y))
+        xi, yi = int(round(xdata)), int(round(ydata))
+
+        # Validate bounds
+        arr = self.im.get_array()
+        h, w = arr.shape
+        if 0 <= xi < w and 0 <= yi < h:
+            val = float(arr[yi, xi])
+            self.status_var.set(f"x={xi} y={yi} val={val:.3f}")
+        else:
+            self.status_var.set("")
+            
     # --- Rendering ---
     def _get_params(self):
         return dict(
@@ -170,7 +203,7 @@ class XrayGUI(tk.Tk):
             w_out, h_out = self.out_w.get(), self.out_h.get()
             if (arr.shape[1], arr.shape[0]) != (w_out, h_out):
                 arr8 = (arr * 255).astype(np.uint8)
-                arr = np.asarray(Image.fromarray(arr8).esuze(
+                arr = np.asarray(Image.fromarray(arr8).resize(
                     (h_out, w_out), resample=Image.BILINEAR) / 255.0)
 
             # save the image
