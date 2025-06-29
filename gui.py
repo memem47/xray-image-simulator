@@ -189,26 +189,38 @@ class XrayGUI(tk.Tk):
         self.canvas.draw_idle()
 
     def _save_png(self):
-        path = filedialog.asksaveasfilename(
-            defaultextension=".png",
-            filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
-        
-        if not path:
-            return
+        import datetime
+
         try:
             # get array from the canvas
-            arr = self.im.get_array()
+            arr = np.asarray(self.im.get_array(), dtype=np.float32)
 
-            # resize if designated by GUI
-            w_out, h_out = self.out_w.get(), self.out_h.get()
+            try:
+                # resize if designated by GUI
+                w_out, h_out = int(self.out_w.get()), int(self.out_h.get())
+            except (ValueError, tk.TclError):
+                w_out, h_out = arr.shape[1], arr.shape[0]
+
             if (arr.shape[1], arr.shape[0]) != (w_out, h_out):
-                arr8 = (arr * 255).astype(np.uint8)
-                arr = np.asarray(Image.fromarray(arr8).resize(
-                    (h_out, w_out), resample=Image.BILINEAR) / 255.0)
+                arr8 = (arr * 255).clip(0, 255).astype(np.uint8)
+                arr8 = Image.fromarray(arr8, mode='L').resize(
+                    (w_out, h_out), resample=Image.BILINEAR
+                )
+                arr = np.asarray(arr8, dtype=np.float32) / 255.0
+
+            ts = datetime.datetime.now().strftime("%Y%m%d %H%M%S")
+            default_name = f"image_{ts}.png"
+
+            path = filedialog.asksaveasfilename(
+                initialfile=default_name,
+                defaultextension=".png",
+                filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
+            
+            if not path:
+                return
 
             # save the image
             matplotlib.image.imsave(path, arr, cmap='gray')
-            messagebox.showinfo("Saved", f"Image saved:\n{path}")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
