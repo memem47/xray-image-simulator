@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from simulator.physics import air_kerma
-from simulator.phantom import cone_thickness_map
+from simulator.phantom import cone_thickness_map, sphere_thickness_map
 from simulator.noise import add_quantum_noise, add_system_noise
 from PIL import Image
 
@@ -22,7 +22,8 @@ def simulate(kvp: float, mas: float,
         photons = air_kerma(kvp, mas)
 
     # --- 2. Cone phantom thickness map ---
-    thickness = cone_thickness_map(height_pix, width_pix,scale=cone_scale,offset_xy=cone_offset)
+    #thickness = cone_thickness_map(height_pix, width_pix,scale=cone_scale,offset_xy=cone_offset)
+    thickness = sphere_thickness_map(height_pix, width_pix,scale=cone_scale,offset_xy=cone_offset)
 
     # --- 3. Bear-Lamber attenuation ---
     transmission = np.exp(-MU_MM_INV * thickness)
